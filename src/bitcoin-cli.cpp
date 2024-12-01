@@ -45,6 +45,7 @@ static const int CONTINUE_EXECUTION=-1;
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
 
+
 static void SetupCliArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
@@ -102,6 +103,7 @@ public:
 
 };
 
+
 //
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
@@ -114,6 +116,7 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
+
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " RPC client version " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {

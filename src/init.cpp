@@ -379,6 +379,8 @@ void SetupServerArgs(NodeContext& node)
     ArgsManager& argsman = *node.args;
 
     SetupHelpOptions(argsman);
+    argsman.AddArg("-genesis", "Create genesis and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+  
     argsman.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // server-only for now
 
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
