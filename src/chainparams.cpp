@@ -20,23 +20,24 @@
 
 #include "arith_uint256.h"
 
+#define GENESIS_FINDER
+
 #define GENESIS_BITS 0x1e0ffff0 // original
-//#define GENESIS_BITS 0x1f00ffff
 //#define GENESIS_BITS 0x1d00ffff
-
 // 100000000
-#define GENESIS_COIN 50 * COIN
+#define GENESIS_COIN 10 * COIN
+#define GENESIS_VERSION 1
 
-#define GENESIS_TIME_STAMP "NY Times 1-Dec-2024 A Second Trump Term Poses a Crucial Test of the Senate’s Independence"
-#define MAIN_GENESIS_TIME 1733074448
-#define MAIN_GENESIS_NONCE 8534
-#define MAIN_GENESIS_HASH "0xdc5dec289f142a01eae48766c7341ee5ade7a41b9f89a88866ca64894ed9e4ef"
-#define MAIN_GENESIS_MERKLE_ROOT "0x3054a591fc572ff37227dee8b9e15a3fa7a56df452fbee64f9bd318f45629b99"
+#define GENESIS_TIME_STAMP "1/Dec/2024 - No pain no gain"
+#define MAIN_GENESIS_TIME 1733100498
+#define MAIN_GENESIS_NONCE 332297
+#define MAIN_GENESIS_HASH "0x50b9e1eca73a069586dd3eaab0af4d3249f58068ec4e84402e6f8a8f65c362de"
+#define MAIN_GENESIS_MERKLE_ROOT "0x53a9f4c18f41d52844524cc78d6a3f8b4c4142349fa15171983f1942f485f0de"
 
-#define TEST_GENESIS_TIME 1733074448
-#define TEST_GENESIS_NONCE 8534
-#define TEST_GENESIS_HASH "0xdc5dec289f142a01eae48766c7341ee5ade7a41b9f89a88866ca64894ed9e4ef"
-#define TEST_GENESIS_MERKLE_ROOT "0x3054a591fc572ff37227dee8b9e15a3fa7a56df452fbee64f9bd318f45629b99"
+#define TEST_GENESIS_TIME 1733100498
+#define TEST_GENESIS_NONCE 332297
+#define TEST_GENESIS_HASH "0x50b9e1eca73a069586dd3eaab0af4d3249f58068ec4e84402e6f8a8f65c362de"
+#define TEST_GENESIS_MERKLE_ROOT "0x53a9f4c18f41d52844524cc78d6a3f8b4c4142349fa15171983f1942f485f0de"
 
 
 /**
@@ -77,8 +78,6 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, uint32_t nTime, uint3
  * Main network
  */
 
-//#define GENESIS_FINDER
-
 #if defined(GENESIS_FINDER)
 // Erases `count` lines, including the current line
 void eraseLines(int count) {
@@ -94,20 +93,21 @@ void eraseLines(int count) {
     }
 }
 
-static void FindMainNetGenesisBlock()
+static bool FindMainNetGenesisBlock(bool force = false)
 {
 
-    if(!gArgs.GetBoolArg("-genesis", false)){
+    if(!gArgs.GetBoolArg("-genesis", false) && !force){
         printf("FindMainNetGenesisBlock - SKIP");
-        return;
+        return false;
     }
 
-    CBlock block = CreateGenesisBlock(GENESIS_TIME_STAMP, std::time(0), 0, GENESIS_BITS, 1, GENESIS_COIN);
+    CBlock block = CreateGenesisBlock(GENESIS_TIME_STAMP, std::time(0), 0, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);
 
     arith_uint256 bnTarget;
     bnTarget.SetCompact(block.nBits);
 
     printf("Finding the genesis block\n");
+    printf("\n");
     for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
         block.nNonce = nNonce;
 
@@ -119,15 +119,14 @@ static void FindMainNetGenesisBlock()
         }
         if (UintToArith256(hash) <= bnTarget) {
             printf("\n******************************************************************\n");
-            printf("Genesis is %s\n", block.ToString().c_str());
-            printf("Pow: 0x%s\n", hash.GetHex().c_str());
-            printf("Time: %d\n", block.nTime);
-            printf("Nonce: %d\n", nNonce);
-            std::cout << "Hash: 0x" << block.GetHash().GetHex() << std::endl;
-            std::cout << "Genesis Merkle: 0x" << block.hashMerkleRoot.GetHex() << std::endl;
+            printf("Genesis is %s\n\n", block.ToString().c_str());
+            printf("   Pow: 0x%s\n", hash.GetHex().c_str());
+            printf("  Time: %d\n", block.nTime);
+            printf(" Nonce: %d\n", nNonce);
+            printf("  Hash: 0x%s\n", block.GetHash().GetHex().c_str());
+            printf("Merkle: 0x%s\n", block.hashMerkleRoot.GetHex().c_str());
             printf("******************************************************************\n");
-            assert(false);
-            return;
+            return true;
         }
 
     }
@@ -135,7 +134,7 @@ static void FindMainNetGenesisBlock()
     // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
     // iteration of the above loop will give a result already
     error("NetGenesisBlock: could not find genesis block");
-    assert(false);
+    return false;
 }
 #endif
 
@@ -157,9 +156,9 @@ public:
         consensus.CSVHeight = 1201536; // 53e0af7626f7f51ce9f3b6cfc36508a5b1d2f6c4a75ac215dc079442692a4c0b
         consensus.SegwitHeight = 1201536; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
         consensus.MinBIP9WarningHeight = 1209600; // segwit activation height + miner confirmation window
-        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 3.5 * 24 * 60 * 60; // 3.5 days
-        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.powLimit = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 4 * 24 * 60 * 60; // 4 days
+        consensus.nPowTargetSpacing = 2 * 60; // 2 minues
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
@@ -186,10 +185,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xff;
+        pchMessageStart[0] = 0xab;
         pchMessageStart[1] = 0xcd;
-        pchMessageStart[2] = 0xda;
-        pchMessageStart[3] = 0xe5;
+        pchMessageStart[2] = 0xef;
+        pchMessageStart[3] = 0xf0;
+
         nDefaultPort = 9333;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 40;
@@ -197,11 +197,13 @@ public:
 
          //Debug Mainnet
 
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, MAIN_GENESIS_TIME, MAIN_GENESIS_NONCE, GENESIS_BITS, 1, GENESIS_COIN);// Change time and set nonce =0
-        
+        bool genesis_find = false;
         #if defined(GENESIS_FINDER)
-            FindMainNetGenesisBlock();
-        #endif			
+            genesis_find = FindMainNetGenesisBlock();
+        #endif	
+
+        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, MAIN_GENESIS_TIME, MAIN_GENESIS_NONCE, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);// Change time and set nonce =0
+        		
 		//genesis = CreateGenesisBlock(1504695029, 8026361, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
@@ -216,11 +218,13 @@ public:
         //printf("Main Genesis hashStateRoot = %sn", genesis.hashStateRoot.ToString().c_str());	
         std::cout << "---------------------------------------------------------------------------------------------------" << std::endl;	
         std::cout << std::endl;	
-//End Debug Mainnet
-       
-        assert(consensus.hashGenesisBlock == uint256S(MAIN_GENESIS_HASH));
-        assert(genesis.hashMerkleRoot == uint256S(MAIN_GENESIS_MERKLE_ROOT));
 
+        if(consensus.hashGenesisBlock != uint256S(MAIN_GENESIS_HASH) || genesis.hashMerkleRoot != uint256S(MAIN_GENESIS_MERKLE_ROOT))
+        {
+            FindMainNetGenesisBlock(true);
+            //assert(consensus.hashGenesisBlock == uint256S(MAIN_GENESIS_HASH));
+           // assert(genesis.hashMerkleRoot == uint256S(MAIN_GENESIS_MERKLE_ROOT));
+        }
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
@@ -229,10 +233,10 @@ public:
         // release ASAP to avoid it where possible.
         //vSeeds.emplace_back("seed-a.litecoin.loshan.co.uk");
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,35);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,48);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SCRIPT_ADDRESS2] = std::vector<unsigned char>(1,50);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,35);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,176);
         base58Prefixes[EXT_PUBLIC_KEY] = {0xfe, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0xfe, 0x88, 0xAD, 0xE4};
 
@@ -312,11 +316,12 @@ public:
         m_assumed_blockchain_size = 4;
         m_assumed_chain_state_size = 1;
 
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE, GENESIS_BITS, 1, GENESIS_COIN);// Change time and set nonce =0
+        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);// Change time and set nonce =0
         consensus.hashGenesisBlock = genesis.GetHash();
-        //assert(consensus.hashGenesisBlock == uint256S(TEST_GENESIS_HASH));
-        //assert(genesis.hashMerkleRoot == uint256S(TEST_GENESIS_MERKLE_ROOT));
-
+        #if !defined(GENESIS_FINDER)
+        assert(consensus.hashGenesisBlock == uint256S(TEST_GENESIS_HASH));
+        assert(genesis.hashMerkleRoot == uint256S(TEST_GENESIS_MERKLE_ROOT));
+        #endif
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
@@ -411,10 +416,12 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE, GENESIS_BITS, 1, GENESIS_COIN);
+        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        //assert(consensus.hashGenesisBlock == uint256S(TEST_GENESIS_HASH));
-        //assert(genesis.hashMerkleRoot == uint256S(TEST_GENESIS_MERKLE_ROOT));
+        #if !defined(GENESIS_FINDER)
+            assert(consensus.hashGenesisBlock == uint256S(TEST_GENESIS_HASH));
+            assert(genesis.hashMerkleRoot == uint256S(TEST_GENESIS_MERKLE_ROOT));
+        #endif
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
