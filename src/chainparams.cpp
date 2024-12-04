@@ -21,7 +21,7 @@
 #include "arith_uint256.h"
 
 #define GENESIS_FINDER
-
+ 
 #define GENESIS_BITS 0x1e0ffff0 // original
 //#define GENESIS_BITS 0x1d00ffff
 // 100000000
@@ -95,15 +95,13 @@ void eraseLines(int count) {
     }
 }
 
-static bool FindMainNetGenesisBlock(bool force = false)
+std::string genesis_time_stamp(GENESIS_TIME_STAMP);
+        uint32_t genesis_time = MAIN_GENESIS_TIME;
+        uint32_t genesis_nonce = MAIN_GENESIS_NONCE;
+
+static bool FindMainNetGenesisBlock(CBlock& block)
 {
-
-    if(!gArgs.GetBoolArg("-genesis", false) && !force){
-        printf("FindMainNetGenesisBlock - SKIP");
-        return false;
-    }
-
-    CBlock block = CreateGenesisBlock(GENESIS_TIME_STAMP, std::time(0), 0);
+    block.nTime = std::time(0); // current time
 
     arith_uint256 bnTarget;
     bnTarget.SetCompact(block.nBits);
@@ -113,16 +111,17 @@ static bool FindMainNetGenesisBlock(bool force = false)
     for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
         block.nNonce = nNonce;
 
-        uint256 hash = block.GetPoWHash();
+        uint256 hash = block.GetPoWHash(); 
         if (nNonce % 100 == 0) {
             eraseLines(1);
             std::cout << "Nonce: " << nNonce << " Pow 0x" << hash.GetHex().c_str() << std::flush;
-            //printf("nonce=%d, pow is %s\n", nNonce, hash.GetHex().c_str());
         }
         if (UintToArith256(hash) <= bnTarget) {
-            printf("\n\n*******************************************************************\n");
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+
+            printf("\n\n");
             printf("*********************** GENESIS BLOCK FOUND ***********************\n");
-            printf("Genesis is %s\n", block.ToString().c_str());
+            printf("Genesis is %s\n\n", block.ToString().c_str());
             printf("   Pow: 0x%s\n", hash.GetHex().c_str());
             printf("  Time: %d\n", block.nTime);
             printf(" Nonce: %d\n", nNonce);
@@ -131,7 +130,6 @@ static bool FindMainNetGenesisBlock(bool force = false)
             printf("*******************************************************************\n\n");
             return true;
         }
-
     }
 
     // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
@@ -201,14 +199,22 @@ public:
 
          //Debug Mainnet
 
-        bool genesis_find = false;
-        #if defined(GENESIS_FINDER)
-            genesis_find = FindMainNetGenesisBlock();
-        #endif	
-
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, MAIN_GENESIS_TIME, MAIN_GENESIS_NONCE);// Change time and set nonce =0
-        		
+        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, MAIN_GENESIS_TIME, MAIN_GENESIS_NONCE);
         consensus.hashGenesisBlock = genesis.GetHash();
+
+        if( consensus.hashGenesisBlock != uint256S(MAIN_GENESIS_HASH) || 
+            genesis.hashMerkleRoot != uint256S(MAIN_GENESIS_MERKLE_ROOT) ||
+            gArgs.GetBoolArg("-genesis", false))
+        {
+
+            if(!gArgs.GetBoolArg("-genesis", false))
+		    {
+                printf("### Invalid Genesis Block found ### \n");
+		        printf("Generating it \n\n");
+            }
+            FindMainNetGenesisBlock(genesis);
+        }
+
 
         std::cout << std::endl;	
         std::cout << "---------------------------------------------------------------------------------------------------" << std::endl;	
@@ -221,13 +227,6 @@ public:
         //printf("Main Genesis hashStateRoot = %sn", genesis.hashStateRoot.ToString().c_str());	
         std::cout << "---------------------------------------------------------------------------------------------------" << std::endl;	
         std::cout << std::endl;	
-
-        if(consensus.hashGenesisBlock != uint256S(MAIN_GENESIS_HASH) || genesis.hashMerkleRoot != uint256S(MAIN_GENESIS_MERKLE_ROOT))
-        {
-            FindMainNetGenesisBlock(true);
-            //assert(consensus.hashGenesisBlock == uint256S(MAIN_GENESIS_HASH));
-           // assert(genesis.hashMerkleRoot == uint256S(MAIN_GENESIS_MERKLE_ROOT));
-        }
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
