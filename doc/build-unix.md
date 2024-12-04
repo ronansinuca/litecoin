@@ -19,7 +19,8 @@ To Build
 
 ```bash
 ./autogen.sh
-./configure
+
+./configure or ./configure --disable-shared
 make
 make install # optional
 ```
@@ -82,6 +83,11 @@ Build requirements:
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
     sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libfmt-dev
+    or try
+    sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+    
+    If that doesn't work, you can install all boost development packages with:
+        sudo apt-get install libboost-all-dev
 
 BerkeleyDB is required for the wallet.
 
