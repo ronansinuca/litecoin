@@ -14,7 +14,7 @@
 #include <memory>
 
 #include <interfaces/node.h>
-
+ 
 class BitcoinGUI;
 class ClientModel;
 class NetworkStyle;
