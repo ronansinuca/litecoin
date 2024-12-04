@@ -25,19 +25,21 @@
 #define GENESIS_BITS 0x1e0ffff0 // original
 //#define GENESIS_BITS 0x1d00ffff
 // 100000000
-#define GENESIS_COIN 10 * COIN
+#define GENESIS_COIN 100 * COIN
 #define GENESIS_VERSION 1
 
-#define GENESIS_TIME_STAMP "1/Dec/2024 - No pain no gain"
-#define MAIN_GENESIS_TIME 1733100498
-#define MAIN_GENESIS_NONCE 332297
-#define MAIN_GENESIS_HASH "0x50b9e1eca73a069586dd3eaab0af4d3249f58068ec4e84402e6f8a8f65c362de"
-#define MAIN_GENESIS_MERKLE_ROOT "0x53a9f4c18f41d52844524cc78d6a3f8b4c4142349fa15171983f1942f485f0de"
+#define GENESIS_TIME_STAMP "2/Dec/2024 - No pain no gain"
 
-#define TEST_GENESIS_TIME 1733100498
-#define TEST_GENESIS_NONCE 332297
-#define TEST_GENESIS_HASH "0x50b9e1eca73a069586dd3eaab0af4d3249f58068ec4e84402e6f8a8f65c362de"
-#define TEST_GENESIS_MERKLE_ROOT "0x53a9f4c18f41d52844524cc78d6a3f8b4c4142349fa15171983f1942f485f0de"
+#define MAIN_GENESIS_TIME 1733172966
+#define MAIN_GENESIS_NONCE 996344
+#define MAIN_GENESIS_HASH "0xaaf450a4a105cc830845cec219192e2110eb1ef7b1c81be81b13a2bb90a004aa"
+#define MAIN_GENESIS_MERKLE_ROOT "0x40bc5b8ce737bd20aa5575bae277a00b1bf4f786f52eaf72dfb5b00cf7da80df"
+
+#define TEST_GENESIS_TIME_STAMP "2/Dec/2024 - No pain no gain"
+#define TEST_GENESIS_TIME 1733172966
+#define TEST_GENESIS_NONCE 996344
+#define TEST_GENESIS_HASH "0xaaf450a4a105cc830845cec219192e2110eb1ef7b1c81be81b13a2bb90a004aa"
+#define TEST_GENESIS_MERKLE_ROOT "0x40bc5b8ce737bd20aa5575bae277a00b1bf4f786f52eaf72dfb5b00cf7da80df"
 
 
 /**
@@ -51,7 +53,7 @@
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(const char* pszTimestamp, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, uint32_t nTime, uint32_t nNonce)
 {
     const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
     
@@ -60,14 +62,14 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, uint32_t nTime, uint3
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].nValue = GENESIS_COIN;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
 
     CBlock genesis;
     genesis.nTime    = nTime;
-    genesis.nBits    = nBits;
+    genesis.nBits    = GENESIS_BITS;
     genesis.nNonce   = nNonce;
-    genesis.nVersion = nVersion;
+    genesis.nVersion = GENESIS_VERSION;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
@@ -101,7 +103,7 @@ static bool FindMainNetGenesisBlock(bool force = false)
         return false;
     }
 
-    CBlock block = CreateGenesisBlock(GENESIS_TIME_STAMP, std::time(0), 0, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);
+    CBlock block = CreateGenesisBlock(GENESIS_TIME_STAMP, std::time(0), 0);
 
     arith_uint256 bnTarget;
     bnTarget.SetCompact(block.nBits);
@@ -118,14 +120,15 @@ static bool FindMainNetGenesisBlock(bool force = false)
             //printf("nonce=%d, pow is %s\n", nNonce, hash.GetHex().c_str());
         }
         if (UintToArith256(hash) <= bnTarget) {
-            printf("\n******************************************************************\n");
-            printf("Genesis is %s\n\n", block.ToString().c_str());
+            printf("\n\n*******************************************************************\n");
+            printf("*********************** GENESIS BLOCK FOUND ***********************\n");
+            printf("Genesis is %s\n", block.ToString().c_str());
             printf("   Pow: 0x%s\n", hash.GetHex().c_str());
             printf("  Time: %d\n", block.nTime);
             printf(" Nonce: %d\n", nNonce);
             printf("  Hash: 0x%s\n", block.GetHash().GetHex().c_str());
             printf("Merkle: 0x%s\n", block.hashMerkleRoot.GetHex().c_str());
-            printf("******************************************************************\n");
+            printf("*******************************************************************\n\n");
             return true;
         }
 
@@ -157,12 +160,13 @@ public:
         consensus.SegwitHeight = 1201536; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
         consensus.MinBIP9WarningHeight = 1209600; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 4 * 24 * 60 * 60; // 4 days
-        consensus.nPowTargetSpacing = 2 * 60; // 2 minues
+        consensus.nPowTargetTimespan = 3 * 24 * 60 * 60; // 3 days
+        consensus.nPowTargetSpacing = 1.5 * 60; // 1.5 minutes
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
         consensus.nMinerConfirmationWindow = 8064; // nPowTargetTimespan / nPowTargetSpacing * 4
+        consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
@@ -202,9 +206,8 @@ public:
             genesis_find = FindMainNetGenesisBlock();
         #endif	
 
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, MAIN_GENESIS_TIME, MAIN_GENESIS_NONCE, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);// Change time and set nonce =0
+        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, MAIN_GENESIS_TIME, MAIN_GENESIS_NONCE);// Change time and set nonce =0
         		
-		//genesis = CreateGenesisBlock(1504695029, 8026361, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         std::cout << std::endl;	
@@ -316,7 +319,7 @@ public:
         m_assumed_blockchain_size = 4;
         m_assumed_chain_state_size = 1;
 
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);// Change time and set nonce =0
+        genesis = CreateGenesisBlock(TEST_GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE);// Change time and set nonce =0
         consensus.hashGenesisBlock = genesis.GetHash();
         #if !defined(GENESIS_FINDER)
         assert(consensus.hashGenesisBlock == uint256S(TEST_GENESIS_HASH));
@@ -416,7 +419,7 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE, GENESIS_BITS, GENESIS_VERSION, GENESIS_COIN);
+        genesis = CreateGenesisBlock(TEST_GENESIS_TIME_STAMP, TEST_GENESIS_TIME, TEST_GENESIS_NONCE);
         consensus.hashGenesisBlock = genesis.GetHash();
         #if !defined(GENESIS_FINDER)
             assert(consensus.hashGenesisBlock == uint256S(TEST_GENESIS_HASH));

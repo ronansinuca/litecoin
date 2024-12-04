@@ -18,6 +18,7 @@ from .address import (
 from .messages import (
     CBlock,
     COIN,
+    COIN_SUBSIDY,
     COutPoint,
     CTransaction,
     CTxIn,
@@ -126,7 +127,7 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0):
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
-    coinbaseoutput.nValue = 50 * COIN
+    coinbaseoutput.nValue = COIN_SUBSIDY
     halvings = int(height / 150)  # regtest
     coinbaseoutput.nValue >>= halvings
     coinbaseoutput.nValue += fees

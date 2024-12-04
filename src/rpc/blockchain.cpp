@@ -1252,6 +1252,7 @@ static RPCHelpMan gettxoutsetinfo()
             ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         }
         ret.pushKV("disk_size", stats.nDiskSize);
+        //ret.pushKV("coins_count", stats.coins_count);
         ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -2170,6 +2171,13 @@ static RPCHelpMan getblockstats()
         feerates_res.push_back(feerate_percentiles[i]);
     }
 
+    CAmount subsidy = 0;
+    //CAmount subsidy = GetBlockSubsidy(pindex->nHeight, Params().GetConsensus());
+    for (const auto& tx: block.vtx[0]->vout) {
+        subsidy += tx.nValue;
+    }
+    subsidy = std::max(subsidy - totalfee, (CAmount)0);
+
     UniValue ret_all(UniValue::VOBJ);
     ret_all.pushKV("avgfee", (block.vtx.size() > 1) ? totalfee / (block.vtx.size() - 1) : 0);
     ret_all.pushKV("avgfeerate", total_weight ? (totalfee * WITNESS_SCALE_FACTOR) / total_weight : 0); // Unit: sat/vbyte
@@ -2188,7 +2196,7 @@ static RPCHelpMan getblockstats()
     ret_all.pushKV("minfeerate", (minfeerate == MAX_MONEY) ? 0 : minfeerate);
     ret_all.pushKV("mintxsize", mintxsize == MAX_BLOCK_SERIALIZED_SIZE ? 0 : mintxsize);
     ret_all.pushKV("outs", outputs);
-    ret_all.pushKV("subsidy", GetBlockSubsidy(pindex->nHeight, Params().GetConsensus()));
+    ret_all.pushKV("subsidy", subsidy);
     ret_all.pushKV("swtotal_size", swtotal_size);
     ret_all.pushKV("swtotal_weight", swtotal_weight);
     ret_all.pushKV("swtxs", swtxs);
