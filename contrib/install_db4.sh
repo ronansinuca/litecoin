@@ -258,3 +258,8 @@ echo
 echo "  export BDB_PREFIX='${BDB_PREFIX}'"
 # shellcheck disable=SC2016
 echo '  ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...'
+
+echo '  export BDB_INCLUDE_PATH="${BDB_PREFIX}/include"'
+echo '  export BDB_LIB_PATH="${BDB_PREFIX}/lib"'
+echo '  sudo ls -s ${BDB_PREFIX}/liblibdb-4.8.so /usr/lib/libdb-4.8.so'
+echo '  sudo ls -s ${BDB_PREFIX}/libdb_cxx-4.8.so /usr/lib/libdb_cxx-4.8.so'

@@ -62,7 +62,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, uint32_t nTime, uint3
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-    txNew.vout[0].nValue = GENESIS_COIN;
+    txNew.vout[0].nValue = COIN_SUBSIDY;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
 
     CBlock genesis;
@@ -99,7 +99,7 @@ std::string genesis_time_stamp(GENESIS_TIME_STAMP);
         uint32_t genesis_time = MAIN_GENESIS_TIME;
         uint32_t genesis_nonce = MAIN_GENESIS_NONCE;
 
-static bool FindMainNetGenesisBlock(CBlock& block)
+static void FindMainNetGenesisBlock(CBlock& block)
 {
     block.nTime = std::time(0); // current time
 
@@ -128,14 +128,14 @@ static bool FindMainNetGenesisBlock(CBlock& block)
             printf("  Hash: 0x%s\n", block.GetHash().GetHex().c_str());
             printf("Merkle: 0x%s\n", block.hashMerkleRoot.GetHex().c_str());
             printf("*******************************************************************\n\n");
-            return true;
+            assert(false);
         }
     }
 
     // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
     // iteration of the above loop will give a result already
     error("NetGenesisBlock: could not find genesis block");
-    return false;
+    assert(false);
 }
 #endif
 
@@ -215,7 +215,7 @@ public:
             FindMainNetGenesisBlock(genesis);
         }
 
-
+#if defined(DEBUG_GENESIS)
         std::cout << std::endl;	
         std::cout << "---------------------------------------------------------------------------------------------------" << std::endl;	
         std::cout << "CMainParams" << std::endl;
@@ -227,6 +227,7 @@ public:
         //printf("Main Genesis hashStateRoot = %sn", genesis.hashStateRoot.ToString().c_str());	
         std::cout << "---------------------------------------------------------------------------------------------------" << std::endl;	
         std::cout << std::endl;	
+#endif
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
@@ -260,7 +261,7 @@ public:
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 17280 fdb81fc2edae4e315716890bd343d814184ea50331cd47166e19120a5163a678
-            /* nTime    */ 1728673449,
+            /* nTime    */ MAIN_GENESIS_TIME,
             /* nTxCount */ 0,
             /* dTxRate  */ 0.0
         };
@@ -524,7 +525,7 @@ const CChainParams &Params() {
     assert(globalChainParams);
     return *globalChainParams;
 }
-
+ 
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN) {
