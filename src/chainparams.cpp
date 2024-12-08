@@ -119,7 +119,7 @@ static void FindMainNetGenesisBlock(CBlock& block)
         if (UintToArith256(hash) <= bnTarget) {
             block.hashMerkleRoot = BlockMerkleRoot(block);
 
-            printf("\n\n");
+            printf("\n\n");  
             printf("*********************** GENESIS BLOCK FOUND ***********************\n");
             printf("Genesis is %s\n\n", block.ToString().c_str());
             printf("   Pow: 0x%s\n", hash.GetHex().c_str());
