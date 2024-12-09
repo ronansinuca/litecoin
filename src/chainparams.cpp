@@ -24,8 +24,7 @@
  
 #define GENESIS_BITS 0x1e0ffff0 // original
 //#define GENESIS_BITS 0x1d00ffff
-// 100000000
-#define GENESIS_COIN 100 * COIN
+
 #define GENESIS_VERSION 1
 
 #define GENESIS_TIME_STAMP "2/Dec/2024 - No pain no gain"
