@@ -20,8 +20,6 @@
 
 #include "arith_uint256.h"
 
-#include <crypto/keccak.h>
-
 #define GENESIS_FINDER
  
 #define GENESIS_BITS 0x1e0ffff0 // original
@@ -109,9 +107,6 @@ static void FindMainNetGenesisBlock(CBlock& block)
 
     printf("Finding the genesis block\n");
     printf("\n");
-    Keccak keccak("1");
-
-    printf("keccak 1 = 0x%s\n", keccak.getHash().c_str());
 
     for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
         block.nNonce = nNonce;
